@@ -1,16 +1,16 @@
 var m = Object.defineProperty;
 var b = (a, e, t) => e in a ? m(a, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : a[e] = t;
-var l = (a, e, t) => (b(a, typeof e != "symbol" ? e + "" : e, t), t);
+var g = (a, e, t) => (b(a, typeof e != "symbol" ? e + "" : e, t), t);
 class v {
   /**
    * 创建一个新的AIScript实例
    * @param config 配置选项
    */
   constructor(e = {}) {
-    l(this, "config");
-    l(this, "initialized", !1);
-    l(this, "CACHE_KEY", "ai-script-cache");
-    l(this, "observer", null);
+    g(this, "config");
+    g(this, "initialized", !1);
+    g(this, "CACHE_KEY", "ai-script-cache");
+    g(this, "observer", null);
     this.config = {
       appKey: "",
       baseUrl: "https://api.deepseek.com",
@@ -82,8 +82,8 @@ class v {
     const e = document.currentScript;
     if (!e)
       return;
-    const t = e.getAttribute("appKey"), i = e.getAttribute("baseUrl"), o = e.getAttribute("model"), s = e.getAttribute("showProcessingOverlay"), c = e.getAttribute("observeDOMChanges");
-    t && (this.config.appKey = t), i && (this.config.baseUrl = i), o && (this.config.model = o), s && (this.config.showProcessingOverlay = s === "true"), c && (this.config.observeDOMChanges = c === "true"), this.config.debug && console.log("AIScript initialized from script tag:", {
+    const t = e.getAttribute("appKey"), i = e.getAttribute("baseUrl"), o = e.getAttribute("model"), s = e.getAttribute("showProcessingOverlay"), r = e.getAttribute("observeDOMChanges");
+    t && (this.config.appKey = t), i && (this.config.baseUrl = i), o && (this.config.model = o), s && (this.config.showProcessingOverlay = s === "true"), r && (this.config.observeDOMChanges = r === "true"), this.config.debug && console.log("AIScript initialized from script tag:", {
       appKey: this.config.appKey,
       baseUrl: this.config.baseUrl,
       model: this.config.model
@@ -91,25 +91,33 @@ class v {
   }
   /**
    * 获取当前页面的DOM结构作为上下文
+   * @param elementId 可选的DOM元素ID，如果提供，则只获取该元素及其子节点
    */
-  getDOMContext() {
-    const e = document.body;
-    let t = `Current page structure:
+  getDOMContext(e) {
+    let t, i;
+    if (e) {
+      const r = document.getElementById(e);
+      r ? (t = r, i = `DOM structure for element with id="${e}":
+`) : (t = document.body, i = `Warning: Element with id="${e}" not found. Using full page structure:
+`, this.config.debug && console.warn(`Element with id="${e}" not found, using body instead.`));
+    } else
+      t = document.body, i = `Current page structure:
 `;
-    const i = (o, s = 0) => {
-      var n;
-      let r = `${" ".repeat(s * 2)}<${o.tagName.toLowerCase()}`;
-      if (o.id && (r += ` id="${o.id}"`), o.className && (r += ` class="${o.className}"`), r += ">", o.children.length === 0) {
-        const h = (n = o.textContent) == null ? void 0 : n.trim();
-        h && (r += ` ${h}`);
+    let o = i;
+    const s = (r, c = 0) => {
+      var d;
+      let l = `${" ".repeat(c * 2)}<${r.tagName.toLowerCase()}`;
+      if (r.id && (l += ` id="${r.id}"`), r.className && (l += ` class="${r.className}"`), l += ">", r.children.length === 0) {
+        const h = (d = r.textContent) == null ? void 0 : d.trim();
+        h && (l += ` ${h}`);
       }
-      r += `
+      l += `
 `;
-      for (let h = 0; h < o.children.length; h++)
-        r += i(o.children[h], s + 1);
-      return r;
+      for (let h = 0; h < r.children.length; h++)
+        l += s(r.children[h], c + 1);
+      return l;
     };
-    return t += i(e), t;
+    return o += s(t), o;
   }
   /**
    * 对DOM上下文进行哈希处理，生成32位字符串作为缓存键
@@ -130,15 +138,11 @@ class v {
     return i = i.repeat(4), i.slice(0, 32);
   }
   /**
-   * 查找并提取AI提示
+   * 查找并提取AI提示元素
+   * @returns AI提示脚本元素列表
    */
   findAIPrompts() {
-    const e = [];
-    return document.querySelectorAll('script[type="ai/prompt"]').forEach((i) => {
-      var s;
-      const o = (s = i.textContent) == null ? void 0 : s.trim();
-      o && e.push(o);
-    }), e;
+    return document.querySelectorAll('script[type="ai/prompt"]');
   }
   /**
    * 创建并派发AI脚本处理事件
@@ -157,7 +161,7 @@ class v {
    * 调用AI API获取代码
    */
   async callAI(e, t, i = !1) {
-    var o, s, c, r;
+    var o, s, r, c;
     try {
       if (!this.config.appKey)
         throw new Error("API Key is required");
@@ -165,15 +169,15 @@ class v {
         prompt: t,
         timestamp: (/* @__PURE__ */ new Date()).toISOString()
       }), this.config.enableCache && !i) {
-        const d = `${this.hashContext(e)}_${t}`, p = this.getCacheItem(d), u = Date.now();
-        if (p && u - p.timestamp < (this.config.cacheExpiration || 24 * 60 * 60 * 1e3))
+        const p = `${this.hashContext(e)}_${t}`, f = this.getCacheItem(p), u = Date.now();
+        if (f && u - f.timestamp < (this.config.cacheExpiration || 24 * 60 * 60 * 1e3))
           return this.config.debug && console.log("Using cached AI response for prompt:", t), this.dispatchAIScriptEvent("ai-script-complete", {
             prompt: t,
             success: !0,
-            hasCode: !!p.response.code,
+            hasCode: !!f.response.code,
             fromCache: !0,
             timestamp: (/* @__PURE__ */ new Date()).toISOString()
-          }), p.response;
+          }), f.response;
       }
       const n = await fetch(`${this.config.baseUrl}/v1/chat/completions`, {
         method: "POST",
@@ -206,20 +210,20 @@ Generate JavaScript code to implement this functionality. Return ONLY the code w
           error: `API request failed with status ${n.status}`,
           timestamp: (/* @__PURE__ */ new Date()).toISOString()
         }), new Error(`API request failed with status ${n.status}`);
-      const g = (r = (c = (s = (o = (await n.json()).choices) == null ? void 0 : o[0]) == null ? void 0 : s.message) == null ? void 0 : c.content) == null ? void 0 : r.trim();
+      const d = (c = (r = (s = (o = (await n.json()).choices) == null ? void 0 : o[0]) == null ? void 0 : s.message) == null ? void 0 : r.content) == null ? void 0 : c.trim();
       if (this.dispatchAIScriptEvent("ai-script-complete", {
         prompt: t,
         success: !0,
-        hasCode: !!g,
+        hasCode: !!d,
         timestamp: (/* @__PURE__ */ new Date()).toISOString()
       }), this.config.enableCache && !i) {
-        const d = `${this.hashContext(e)}_${t}`;
-        this.setCacheItem(d, {
-          response: { code: g },
+        const p = `${this.hashContext(e)}_${t}`;
+        this.setCacheItem(p, {
+          response: { code: d },
           timestamp: Date.now()
-        }), this.config.debug && console.log("Cached AI response with key:", d);
+        }), this.config.debug && console.log("Cached AI response with key:", p);
       }
-      return { code: g };
+      return { code: d };
     } catch (n) {
       return console.error("AI API call failed:", n), this.dispatchAIScriptEvent("ai-script-complete", {
         prompt: t,
@@ -325,12 +329,12 @@ Generate JavaScript code to implement this functionality. Return ONLY the code w
    * @param skipCache 是否跳过缓存
    */
   async processPromptElement(e, t = !1) {
-    var r;
-    const i = (r = e.textContent) == null ? void 0 : r.trim();
+    var n;
+    const i = (n = e.textContent) == null ? void 0 : n.trim();
     if (!i)
       return;
-    const o = this.showProcessingOverlay(), s = this.getDOMContext(), c = await this.callAI(s, i, t);
-    c.code ? this.executeCode(c.code, s, i) : c.error && this.config.debug && console.error("AI code generation failed:", c.error), o && o.remove();
+    const o = this.showProcessingOverlay(), s = e instanceof HTMLElement ? e.getAttribute("for") : null, r = this.getDOMContext(s || void 0), c = await this.callAI(r, i, t);
+    c.code ? this.executeCode(c.code, r, i) : c.error && this.config.debug && console.error("AI code generation failed:", c.error), o && o.remove();
   }
   /**
    * 设置DOM变化观察器
@@ -343,8 +347,8 @@ Generate JavaScript code to implement this functionality. Return ONLY the code w
         i.type === "childList" && i.addedNodes.length > 0 && i.addedNodes.forEach((o) => {
           if (o.nodeType === Node.ELEMENT_NODE) {
             const s = o;
-            s.nodeName === "SCRIPT" && s.getAttribute("type") === "ai/prompt" ? this.processPromptElement(s, !0) : s.querySelectorAll('script[type="ai/prompt"]').forEach((r) => {
-              this.processPromptElement(r, !0);
+            s.nodeName === "SCRIPT" && s.getAttribute("type") === "ai/prompt" ? this.processPromptElement(s, !0) : s.querySelectorAll('script[type="ai/prompt"]').forEach((c) => {
+              this.processPromptElement(c, !0);
             });
           }
         });
@@ -359,16 +363,20 @@ Generate JavaScript code to implement this functionality. Return ONLY the code w
     this.observer && (this.observer.disconnect(), this.observer = null, this.config.debug && console.log("DOM observer stopped"));
   }
   async init() {
+    var i;
     if (this.initialized)
       return;
     this.initialized = !0;
-    const e = this.showProcessingOverlay(), t = this.getDOMContext(), i = this.findAIPrompts();
-    if (i.length === 0)
+    const e = this.showProcessingOverlay(), t = this.findAIPrompts();
+    if (t.length === 0)
       this.config.debug && console.log("No AI prompts found on the page");
     else
-      for (const o of i) {
-        const s = await this.callAI(t, o);
-        s.code ? this.executeCode(s.code, t, o) : s.error && this.config.debug && console.error("AI code generation failed:", s.error);
+      for (const o of t) {
+        const s = (i = o.textContent) == null ? void 0 : i.trim();
+        if (!s)
+          continue;
+        const r = o instanceof HTMLElement ? o.getAttribute("for") : null, c = this.getDOMContext(r || void 0), n = await this.callAI(c, s);
+        n.code ? this.executeCode(n.code, c, s) : n.error && this.config.debug && console.error("AI code generation failed:", n.error);
       }
     this.setupDOMObserver(), e && e.remove();
   }

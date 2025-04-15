@@ -129,13 +129,15 @@
   <h1>动态提示词演示 - AI-Script</h1>
   
   <div class="demo-container">
-    <h2>交通灯控制</h2>
-    <div class="traffic-light">
-      <div class="light red" data-color="红灯"></div>
-      <div class="light yellow" data-color="黄灯"></div>
-      <div class="light green" data-color="绿灯"></div>
+    <div id="traffic-light-container"></div>
+      <h2>交通灯控制</h2>
+      <div class="traffic-light">
+        <div class="light red" data-color="红灯"></div>
+        <div class="light yellow" data-color="黄灯"></div>
+        <div class="light green" data-color="绿灯"></div>
+      </div>
+      <div class="status">当前状态: <span>初始化中...</span></div>
     </div>
-    <div class="status">当前状态: <span>初始化中...</span></div>
     
     <div class="prompt-editor">
       <h3>编辑AI提示</h3>
@@ -196,6 +198,7 @@
         const scriptElement = document.createElement('script');
         scriptElement.type = 'ai/prompt';
         scriptElement.textContent = promptText;
+        scriptElement.setAttribute('for', 'traffic-light-container');
         document.body.appendChild(scriptElement);
         
         console.log('已添加动态提示脚本:', promptText);

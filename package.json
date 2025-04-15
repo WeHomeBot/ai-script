@@ -1,6 +1,6 @@
 {
   "name": "@bearbobo/ai-script",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "TypeScript library that can run in browser",
   "type": "module",
   "main": "./dist/ai-script.umd.js",

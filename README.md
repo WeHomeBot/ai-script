@@ -115,6 +115,34 @@ This will generate the following files in the `dist` directory:
 pnpm test
 ```
 
+## DOM Targeting with `for` Attribute
+
+AI-Script supports targeting specific DOM elements using the `for` attribute. This allows the AI to focus only on a specific element and its children, rather than processing the entire page structure.
+
+### Usage
+
+```html
+<script type="ai/prompt" for="element-id">
+  Implement functionality for this specific element only
+</script>
+```
+
+You can also set the `for` attribute dynamically when creating script elements:
+
+```javascript
+const scriptElement = document.createElement('script');
+scriptElement.type = 'ai/prompt';
+scriptElement.textContent = promptText;
+scriptElement.setAttribute('for', 'target-element-id');
+document.body.appendChild(scriptElement);
+```
+
+### Benefits
+
+- **Improved Performance**: The AI only processes the relevant part of the DOM
+- **Better Context**: Provides more focused context for the AI to understand the task
+- **Modular Design**: Allows different AI scripts to target different parts of your page
+
 ## Caching Mechanism
 
 AI-Script has a built-in caching feature that can significantly improve performance and reduce API calls. When the same prompt is used multiple times in the same page context, the caching mechanism will directly return the previous result instead of calling the API again.

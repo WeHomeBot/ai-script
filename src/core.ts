@@ -213,11 +213,34 @@ export class AIScript {
 
   /**
    * 获取当前页面的DOM结构作为上下文
+   * @param elementId 可选的DOM元素ID，如果提供，则只获取该元素及其子节点
    */
-  private getDOMContext(): string {
+  private getDOMContext(elementId?: string): string {
     // 简化的DOM结构描述
-    const body = document.body;
-    let context = 'Current page structure:\n';
+    let rootElement: Element;
+    let contextPrefix: string;
+    
+    if (elementId) {
+      // 如果提供了elementId，则获取指定元素
+      const targetElement = document.getElementById(elementId);
+      if (targetElement) {
+        rootElement = targetElement;
+        contextPrefix = `DOM structure for element with id="${elementId}":\n`;
+      } else {
+        // 如果找不到指定元素，则使用body并记录警告
+        rootElement = document.body;
+        contextPrefix = `Warning: Element with id="${elementId}" not found. Using full page structure:\n`;
+        if (this.config.debug) {
+          console.warn(`Element with id="${elementId}" not found, using body instead.`);
+        }
+      }
+    } else {
+      // 如果没有提供elementId，则使用body
+      rootElement = document.body;
+      contextPrefix = 'Current page structure:\n';
+    }
+    
+    let context = contextPrefix;
     
     // 递归函数来描述DOM结构
     const describeElement = (element: Element, depth: number = 0): string => {
@@ -251,7 +274,7 @@ export class AIScript {
       return description;
     };
     
-    context += describeElement(body);
+    context += describeElement(rootElement);
     return context;
   }
   
@@ -286,18 +309,11 @@ export class AIScript {
   }
 
   /**
-   * 查找并提取AI提示
+   * 查找并提取AI提示元素
+   * @returns AI提示脚本元素列表
    */
-  private findAIPrompts(): string[] {
-    const prompts: string[] = [];
-    const promptElements = document.querySelectorAll('script[type="ai/prompt"]');
-    
-    promptElements.forEach(element => {
-      const content = element.textContent?.trim();
-      if (content) prompts.push(content);
-    });
-    
-    return prompts;
+  private findAIPrompts(): NodeListOf<Element> {
+    return document.querySelectorAll('script[type="ai/prompt"]');
   }
 
   /**
@@ -576,8 +592,11 @@ export class AIScript {
     // 显示处理中的浮层
     const el = this.showProcessingOverlay();
     
-    // 获取DOM上下文
-    const context = this.getDOMContext();
+    // 获取for属性，如果存在，则只获取指定DOM元素的上下文
+    const forElementId = promptElement instanceof HTMLElement ? promptElement.getAttribute('for') : null;
+    
+    // 获取DOM上下文，如果有for属性，则传递给getDOMContext
+    const context = this.getDOMContext(forElementId || undefined);
     
     // 调用AI获取代码
     const response = await this.callAI(context, content, skipCache);
@@ -659,25 +678,31 @@ export class AIScript {
 
     const el = this.showProcessingOverlay();
     
-    // 获取DOM上下文
-    const context = this.getDOMContext();
-    
     // 查找AI提示
-    const prompts = this.findAIPrompts();
+    const promptElements = this.findAIPrompts();
     
-    if (prompts.length === 0) {
+    if (promptElements.length === 0) {
       if (this.config.debug) {
         console.log('No AI prompts found on the page');
       }
     } else {
-      // 处理每个提示
-      for (const prompt of prompts) {
+      // 处理每个提示元素
+      for (const promptElement of promptElements) {
+        const content = promptElement.textContent?.trim();
+        if (!content) continue;
+        
+        // 获取for属性，如果存在，则只获取指定DOM元素的上下文
+        const forElementId = promptElement instanceof HTMLElement ? promptElement.getAttribute('for') : null;
+        
+        // 获取DOM上下文，如果有for属性，则传递给getDOMContext
+        const context = this.getDOMContext(forElementId || undefined);
+        
         // 调用AI获取代码
-        const response = await this.callAI(context, prompt);
+        const response = await this.callAI(context, content);
         
         if (response.code) {
           // 执行生成的代码，传递context和prompt以便在出错时清除缓存
-          this.executeCode(response.code, context, prompt);
+          this.executeCode(response.code, context, content);
         } else if (response.error && this.config.debug) {
           console.error('AI code generation failed:', response.error);
         }

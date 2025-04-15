@@ -113,6 +113,34 @@ pnpm build
 pnpm test
 ```
 
+## 使用 `for` 属性定位DOM元素
+
+AI-Script支持使用`for`属性定位特定DOM元素。这允许AI只关注特定元素及其子节点，而不是处理整个页面结构。
+
+### 使用方法
+
+```html
+<script type="ai/prompt" for="element-id">
+  仅为这个特定元素实现功能
+</script>
+```
+
+您也可以在动态创建script元素时设置`for`属性：
+
+```javascript
+const scriptElement = document.createElement('script');
+scriptElement.type = 'ai/prompt';
+scriptElement.textContent = promptText;
+scriptElement.setAttribute('for', 'target-element-id');
+document.body.appendChild(scriptElement);
+```
+
+### 优势
+
+- **提升性能**：AI只处理DOM的相关部分
+- **更好的上下文**：为AI提供更集中的上下文以理解任务
+- **模块化设计**：允许不同的AI脚本针对页面的不同部分
+
 ## 缓存机制
 
 AI-Script 内置了缓存功能，可以显著提高性能并减少API调用次数。当相同的提示在相同的页面上下文中被多次使用时，缓存机制会直接返回之前的结果，而不是重新调用API。
