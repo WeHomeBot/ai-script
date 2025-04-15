@@ -35,6 +35,8 @@ export interface AIScriptConfig {
    * 缓存过期时间（毫秒）
    */
   cacheExpiration?: number;
+
+  showProcessingOverlay?: boolean;
 }
 
 /**
@@ -158,6 +160,7 @@ export class AIScript {
       debug: false,
       enableCache: true,
       cacheExpiration: 30 * 24 * 60 * 60 * 1000, // 默认缓存30天
+      showProcessingOverlay: true,
       ...config
     };
     // 从script标签初始化配置
@@ -180,10 +183,12 @@ export class AIScript {
     const appKey = scriptTag.getAttribute('appKey');
     const baseUrl = scriptTag.getAttribute('baseUrl');
     const model = scriptTag.getAttribute('model');
+    const showProcessingOverlay = scriptTag.getAttribute('showProcessingOverlay');
     
     if (appKey) this.config.appKey = appKey;
     if (baseUrl) this.config.baseUrl = baseUrl;
     if (model) this.config.model = model;
+    if (showProcessingOverlay) this.config.showProcessingOverlay = showProcessingOverlay === 'true';
     
     if (this.config.debug) {
       console.log('AIScript initialized from script tag:', {
@@ -433,12 +438,79 @@ export class AIScript {
     }
   }
 
+  private showProcessingOverlay(): HTMLElement | null | undefined  {
+    let el;
+    if (this.config.showProcessingOverlay) {
+      const body = document.body;
+      if (!body) return;
+      // 初始化AI脚本
+      el = document.createElement('div');
+      el.id="ai-script-overlay-container";
+      el.innerHTML = `
+<style>
+  /* AI处理浮层样式 */
+  #ai-script-overlay-container .ai-processing-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+  #ai-script-overlay-container .ai-processing-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+  #ai-script-overlay-container .ai-processing-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    max-width: 80%;
+  }
+  #ai-script-overlay-container .ai-processing-spinner {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #4CAF50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+<div class="ai-processing-overlay active">
+  <div class="ai-processing-content">
+    <div class="ai-processing-spinner"></div>
+    <p>AI is processing, please wait...</p>
+  </div>
+</div>
+      `
+      body.appendChild(el);
+    }
+    return el;
+  }
+
   /**
    * 初始化并运行AI脚本
    */
   async init(): Promise<void> {
     if (this.initialized) return;
     this.initialized = true;
+
+    const el = this.showProcessingOverlay();
     
     // 获取DOM上下文
     const context = this.getDOMContext();
@@ -465,15 +537,19 @@ export class AIScript {
         console.error('AI code generation failed:', response.error);
       }
     }
+
+    el && el.remove();
   }
 }
 
 // 当脚本加载完成后自动初始化
 if (typeof window !== 'undefined') {
   const aiScript = new AIScript();
-  window.addEventListener('DOMContentLoaded', () => {
-    aiScript.init().catch(error => {
+  window.addEventListener('DOMContentLoaded', async () => {
+    try {
+      await aiScript.init();
+    } catch (error) {
       console.error('AIScript initialization failed:', error);
-    });
+    }
   });
 }
