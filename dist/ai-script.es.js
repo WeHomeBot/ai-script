@@ -1,6 +1,6 @@
 var u = Object.defineProperty;
-var m = (c, e, t) => e in c ? u(c, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : c[e] = t;
-var l = (c, e, t) => (m(c, typeof e != "symbol" ? e + "" : e, t), t);
+var m = (a, e, t) => e in a ? u(a, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : a[e] = t;
+var l = (a, e, t) => (m(a, typeof e != "symbol" ? e + "" : e, t), t);
 class y {
   /**
    * 创建一个新的AIScript实例
@@ -59,18 +59,18 @@ class y {
    * @param item 缓存项
    */
   setCacheItem(e, t) {
-    const i = { [e]: t };
-    this.saveCacheToStorage(i);
+    const o = { [e]: t };
+    this.saveCacheToStorage(o);
   }
   /**
    * 清理过期的缓存项
    */
   cleanExpiredCache() {
     const e = this.getCacheFromStorage(), t = Date.now();
-    let i = !1;
-    for (const o in e)
-      t - e[o].timestamp > (this.config.cacheExpiration || 24 * 60 * 60 * 1e3) && (delete e[o], i = !0);
-    i && (this.saveCacheToStorage(e), this.config.debug && console.log("Expired cache items cleaned"));
+    let o = !1;
+    for (const i in e)
+      t - e[i].timestamp > (this.config.cacheExpiration || 24 * 60 * 60 * 1e3) && (delete e[i], o = !0);
+    o && (this.saveCacheToStorage(e), this.config.debug && console.log("Expired cache items cleaned"));
   }
   /**
    * 从script标签初始化配置
@@ -79,8 +79,8 @@ class y {
     const e = document.currentScript;
     if (!e)
       return;
-    const t = e.getAttribute("appKey"), i = e.getAttribute("baseUrl"), o = e.getAttribute("model"), r = e.getAttribute("showProcessingOverlay");
-    t && (this.config.appKey = t), i && (this.config.baseUrl = i), o && (this.config.model = o), r && (this.config.showProcessingOverlay = r === "true"), this.config.debug && console.log("AIScript initialized from script tag:", {
+    const t = e.getAttribute("appKey"), o = e.getAttribute("baseUrl"), i = e.getAttribute("model"), s = e.getAttribute("showProcessingOverlay");
+    t && (this.config.appKey = t), o && (this.config.baseUrl = o), i && (this.config.model = i), s && (this.config.showProcessingOverlay = s === "true"), this.config.debug && console.log("AIScript initialized from script tag:", {
       appKey: this.config.appKey,
       baseUrl: this.config.baseUrl,
       model: this.config.model
@@ -93,20 +93,20 @@ class y {
     const e = document.body;
     let t = `Current page structure:
 `;
-    const i = (o, r = 0) => {
+    const o = (i, s = 0) => {
       var p;
-      let s = `${" ".repeat(r * 2)}<${o.tagName.toLowerCase()}`;
-      if (o.id && (s += ` id="${o.id}"`), o.className && (s += ` class="${o.className}"`), s += ">", o.children.length === 0) {
-        const n = (p = o.textContent) == null ? void 0 : p.trim();
-        n && (s += ` ${n}`);
+      let r = `${" ".repeat(s * 2)}<${i.tagName.toLowerCase()}`;
+      if (i.id && (r += ` id="${i.id}"`), i.className && (r += ` class="${i.className}"`), r += ">", i.children.length === 0) {
+        const c = (p = i.textContent) == null ? void 0 : p.trim();
+        c && (r += ` ${c}`);
       }
-      s += `
+      r += `
 `;
-      for (let n = 0; n < o.children.length; n++)
-        s += i(o.children[n], r + 1);
-      return s;
+      for (let c = 0; c < i.children.length; c++)
+        r += o(i.children[c], s + 1);
+      return r;
     };
-    return t += i(e), t;
+    return t += o(e), t;
   }
   /**
    * 对DOM上下文进行哈希处理，生成32位字符串作为缓存键
@@ -117,24 +117,24 @@ class y {
     let t = 0;
     if (e.length === 0)
       return "00000000000000000000000000000000";
-    for (let o = 0; o < e.length; o++) {
-      const r = e.charCodeAt(o);
-      t = (t << 5) - t + r, t = t & t;
+    for (let i = 0; i < e.length; i++) {
+      const s = e.charCodeAt(i);
+      t = (t << 5) - t + s, t = t & t;
     }
-    let i = (t >>> 0).toString(16);
-    for (; i.length < 8; )
-      i = "0" + i;
-    return i = i.repeat(4), i.slice(0, 32);
+    let o = (t >>> 0).toString(16);
+    for (; o.length < 8; )
+      o = "0" + o;
+    return o = o.repeat(4), o.slice(0, 32);
   }
   /**
    * 查找并提取AI提示
    */
   findAIPrompts() {
     const e = [];
-    return document.querySelectorAll('script[type="ai/prompt"]').forEach((i) => {
-      var r;
-      const o = (r = i.textContent) == null ? void 0 : r.trim();
-      o && e.push(o);
+    return document.querySelectorAll('script[type="ai/prompt"]').forEach((o) => {
+      var s;
+      const i = (s = o.textContent) == null ? void 0 : s.trim();
+      i && e.push(i);
     }), e;
   }
   /**
@@ -143,18 +143,18 @@ class y {
    * @param detail 事件详情
    */
   dispatchAIScriptEvent(e, t) {
-    const i = new CustomEvent(e, {
+    const o = new CustomEvent(e, {
       bubbles: !0,
       cancelable: !0,
       detail: t
     });
-    document.dispatchEvent(i), this.config.debug && console.log(`AIScript event dispatched: ${e}`, t);
+    document.dispatchEvent(o), this.config.debug && console.log(`AIScript event dispatched: ${e}`, t);
   }
   /**
    * 调用AI API获取代码
    */
   async callAI(e, t) {
-    var i, o, r, d;
+    var o, i, s, d;
     try {
       if (!this.config.appKey)
         throw new Error("API Key is required");
@@ -162,7 +162,7 @@ class y {
         prompt: t,
         timestamp: (/* @__PURE__ */ new Date()).toISOString()
       }), this.config.enableCache) {
-        const a = `${this.hashContext(e)}_${t}`, h = this.getCacheItem(a), f = Date.now();
+        const n = `${this.hashContext(e)}_${t}`, h = this.getCacheItem(n), f = Date.now();
         if (h && f - h.timestamp < (this.config.cacheExpiration || 24 * 60 * 60 * 1e3))
           return this.config.debug && console.log("Using cached AI response for prompt:", t), this.dispatchAIScriptEvent("ai-script-complete", {
             prompt: t,
@@ -172,7 +172,7 @@ class y {
             timestamp: (/* @__PURE__ */ new Date()).toISOString()
           }), h.response;
       }
-      const s = await fetch(`${this.config.baseUrl}/v1/chat/completions`, {
+      const r = await fetch(`${this.config.baseUrl}/v1/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -196,45 +196,60 @@ Generate JavaScript code to implement this functionality. Return ONLY the code w
           ]
         })
       });
-      if (!s.ok)
+      if (!r.ok)
         throw this.dispatchAIScriptEvent("ai-script-complete", {
           prompt: t,
           success: !1,
-          error: `API request failed with status ${s.status}`,
+          error: `API request failed with status ${r.status}`,
           timestamp: (/* @__PURE__ */ new Date()).toISOString()
-        }), new Error(`API request failed with status ${s.status}`);
-      const n = (d = (r = (o = (i = (await s.json()).choices) == null ? void 0 : i[0]) == null ? void 0 : o.message) == null ? void 0 : r.content) == null ? void 0 : d.trim();
+        }), new Error(`API request failed with status ${r.status}`);
+      const c = (d = (s = (i = (o = (await r.json()).choices) == null ? void 0 : o[0]) == null ? void 0 : i.message) == null ? void 0 : s.content) == null ? void 0 : d.trim();
       if (this.dispatchAIScriptEvent("ai-script-complete", {
         prompt: t,
         success: !0,
-        hasCode: !!n,
+        hasCode: !!c,
         timestamp: (/* @__PURE__ */ new Date()).toISOString()
       }), this.config.enableCache) {
-        const a = `${this.hashContext(e)}_${t}`;
-        this.setCacheItem(a, {
-          response: { code: n },
+        const n = `${this.hashContext(e)}_${t}`;
+        this.setCacheItem(n, {
+          response: { code: c },
           timestamp: Date.now()
-        }), this.config.debug && console.log("Cached AI response with key:", a);
+        }), this.config.debug && console.log("Cached AI response with key:", n);
       }
-      return { code: n };
-    } catch (s) {
-      return console.error("AI API call failed:", s), this.dispatchAIScriptEvent("ai-script-complete", {
+      return { code: c };
+    } catch (r) {
+      return console.error("AI API call failed:", r), this.dispatchAIScriptEvent("ai-script-complete", {
         prompt: t,
         success: !1,
-        error: s instanceof Error ? s.message : String(s),
+        error: r instanceof Error ? r.message : String(r),
         timestamp: (/* @__PURE__ */ new Date()).toISOString()
-      }), { error: s instanceof Error ? s.message : String(s) };
+      }), { error: r instanceof Error ? r.message : String(r) };
     }
   }
   /**
-   * 执行生成的代码
+   * 清除特定提示的缓存
+   * @param context 上下文
+   * @param prompt 提示
    */
-  executeCode(e) {
+  clearPromptCache(e, t) {
+    if (!this.config.enableCache)
+      return;
+    const i = `${this.hashContext(e)}_${t}`, s = this.getCacheFromStorage();
+    s[i] && (delete s[i], this.saveCacheToStorage(s), this.config.debug && console.log("Cleared cache for prompt:", t));
+  }
+  /**
+   * 执行生成的代码
+   * 如果代码包含Markdown代码块标记(```javascript和```)，会自动移除这些标记
+   * 如果执行出错，会清除相关缓存
+   */
+  executeCode(e, t, o) {
     try {
-      const t = document.createElement("script");
-      t.textContent = e, document.head.appendChild(t), this.config.debug && console.log("Executed AI-generated code:", e);
-    } catch (t) {
-      console.error("Failed to execute AI-generated code:", t);
+      let i = e;
+      i = i.replace(/^```(javascript|js)\s*\n/i, ""), i = i.replace(/\n```\s*$/i, "");
+      const s = document.createElement("script");
+      s.textContent = i, document.head.appendChild(s), this.config.debug && console.log("Executed AI-generated code:", i);
+    } catch (i) {
+      console.error("Failed to execute AI-generated code:", i), t && o && (this.clearPromptCache(t, o), this.config.debug && console.log("Cleared cache due to code execution error"));
     }
   }
   showProcessingOverlay() {
@@ -305,23 +320,23 @@ Generate JavaScript code to implement this functionality. Return ONLY the code w
     if (this.initialized)
       return;
     this.initialized = !0;
-    const e = this.showProcessingOverlay(), t = this.getDOMContext(), i = this.findAIPrompts();
-    if (i.length === 0) {
+    const e = this.showProcessingOverlay(), t = this.getDOMContext(), o = this.findAIPrompts();
+    if (o.length === 0) {
       this.config.debug && console.log("No AI prompts found on the page");
       return;
     }
-    for (const o of i) {
-      const r = await this.callAI(t, o);
-      r.code ? this.executeCode(r.code) : r.error && this.config.debug && console.error("AI code generation failed:", r.error);
+    for (const i of o) {
+      const s = await this.callAI(t, i);
+      s.code ? this.executeCode(s.code, t, i) : s.error && this.config.debug && console.error("AI code generation failed:", s.error);
     }
     e && e.remove();
   }
 }
 if (typeof window < "u") {
-  const c = new y();
+  const a = new y();
   window.addEventListener("DOMContentLoaded", async () => {
     try {
-      await c.init();
+      await a.init();
     } catch (e) {
       console.error("AIScript initialization failed:", e);
     }

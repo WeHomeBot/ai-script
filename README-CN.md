@@ -85,21 +85,21 @@
 ### 安装依赖
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 开发模式
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
-这将启动开发服务器，您可以在浏览器中访问 `http://localhost:5173` 查看示例页面。
+这将启动开发服务器，您可以在浏览器中访问 `http://localhost:8080` 查看示例页面。
 
 ### 构建库
 
 ```bash
-npm run build
+pnpm build
 ```
 
 这将在 `dist` 目录下生成以下文件：
@@ -110,7 +110,7 @@ npm run build
 ### 运行测试
 
 ```bash
-npm test
+pnpm test
 ```
 
 ## 缓存机制

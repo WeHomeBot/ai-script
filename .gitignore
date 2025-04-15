@@ -1,6 +1,9 @@
 # Ignore index.html to prevent API key leakage
 index.html
 
+# Ignore demos directory
+demos/
+
 # Logs
 logs
 *.log

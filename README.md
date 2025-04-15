@@ -85,21 +85,21 @@ Provides AI scripts that can run in the browser.
 ### Install Dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Development Mode
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
-This will start a development server, and you can access the example page in your browser at `http://localhost:5173`.
+This will start a development server, and you can access the example page in your browser at `http://localhost:8080`.
 
 ### Build Library
 
 ```bash
-npm run build
+pnpm build
 ```
 
 This will generate the following files in the `dist` directory:
@@ -110,7 +110,7 @@ This will generate the following files in the `dist` directory:
 ### Run Tests
 
 ```bash
-npm test
+pnpm test
 ```
 
 ## Caching Mechanism

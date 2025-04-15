@@ -421,20 +421,61 @@ export class AIScript {
   }
 
   /**
-   * 执行生成的代码
+   * 清除特定提示的缓存
+   * @param context 上下文
+   * @param prompt 提示
    */
-  private executeCode(code: string): void {
+  private clearPromptCache(context: string, prompt: string): void {
+    if (!this.config.enableCache) return;
+    
+    const contextHash = this.hashContext(context);
+    const cacheKey = `${contextHash}_${prompt}`;
+    
+    const cacheData = this.getCacheFromStorage();
+    if (cacheData[cacheKey]) {
+      delete cacheData[cacheKey];
+      this.saveCacheToStorage(cacheData);
+      
+      if (this.config.debug) {
+        console.log('Cleared cache for prompt:', prompt);
+      }
+    }
+  }
+
+  /**
+   * 执行生成的代码
+   * 如果代码包含Markdown代码块标记(```javascript和```)，会自动移除这些标记
+   * 如果执行出错，会清除相关缓存
+   */
+  private executeCode(code: string, context?: string, prompt?: string): void {
     try {
+      // 检查并移除Markdown代码块标记
+      let cleanCode = code;
+      
+      // 移除开头的```javascript或```js标记
+      cleanCode = cleanCode.replace(/^```(javascript|js)\s*\n/i, '');
+      
+      // 移除结尾的```标记
+      cleanCode = cleanCode.replace(/\n```\s*$/i, '');
+      
       // 创建一个新的script元素并执行代码
       const scriptElement = document.createElement('script');
-      scriptElement.textContent = code;
+      scriptElement.textContent = cleanCode;
       document.head.appendChild(scriptElement);
       
       if (this.config.debug) {
-        console.log('Executed AI-generated code:', code);
+        console.log('Executed AI-generated code:', cleanCode);
       }
     } catch (error) {
       console.error('Failed to execute AI-generated code:', error);
+      
+      // 如果执行出错且提供了上下文和提示，清除相关缓存
+      if (context && prompt) {
+        this.clearPromptCache(context, prompt);
+        if (this.config.debug) {
+          console.log('Cleared cache due to code execution error');
+        }
+      }
     }
   }
 
@@ -531,8 +572,8 @@ export class AIScript {
       const response = await this.callAI(context, prompt);
       
       if (response.code) {
-        // 执行生成的代码
-        this.executeCode(response.code);
+        // 执行生成的代码，传递context和prompt以便在出错时清除缓存
+        this.executeCode(response.code, context, prompt);
       } else if (response.error && this.config.debug) {
         console.error('AI code generation failed:', response.error);
       }
