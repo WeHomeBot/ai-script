@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Script Demo</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    .demo-container {
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    input {
+      padding: 8px;
+      width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #e9f7ef;
+      border-radius: 4px;
+    }
+    /* AI处理浮层样式 */
+    .ai-processing-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    .ai-processing-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .ai-processing-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      max-width: 80%;
+    }
+    .ai-processing-spinner {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #4CAF50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+  <script src="./dist/ai-script.umd.js" appKey="sk-262**********62b" baseUrl="https://api.deepseek.com" model="deepseek-chat"></script>
+</head>
+<body>
+  <!-- AI处理浮层 -->
+  <div class="ai-processing-overlay">
+    <div class="ai-processing-content">
+      <div class="ai-processing-spinner"></div>
+      <p>AI正在处理中，请稍候...</p>
+    </div>
+  </div>
+
+  <h1>AI-Script Demo</h1>
+  
+  <div class="demo-container">
+    <h2>Try it out</h2>
+    <p>Press button to add count: <span>0</span> clicks</p>
+    
+    <button>Click me</button>
+  </div>
+
+  <script type="ai/prompt">
+    每次点击按钮，点击次数加1
+  </script>
+
+  <!-- 事件监听器 -->
+  <script>
+    // 获取浮层元素
+    const overlay = document.querySelector('.ai-processing-overlay');
+    
+    // 监听AI处理开始事件
+    document.addEventListener('ai-script-start', function(event) {
+      // 显示浮层
+      overlay.classList.add('active');
+    });
+    
+    // 监听AI处理完成事件
+    document.addEventListener('ai-script-complete', function(event) {
+      // 隐藏浮层
+      overlay.classList.remove('active');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "name": "ai-script",
+  "version": "0.1.0",
+  "description": "TypeScript library that can run in browser",
+  "type": "module",
+  "main": "./dist/ai-script.umd.js",
+  "module": "./dist/ai-script.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/ai-script.es.js",
+      "require": "./dist/ai-script.umd.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "concurrently \"vite build --watch\" \"http-server -c-1 -o\"",
+    "build": "vite build && tsc --emitDeclarationOnly",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "http-server": "^14.1.1",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "vitest": "^0.34.3"
+  }
+}
