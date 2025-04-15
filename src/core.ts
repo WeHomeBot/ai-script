@@ -36,7 +36,15 @@ export interface AIScriptConfig {
    */
   cacheExpiration?: number;
 
+  /**
+   * 是否显示处理中的浮层
+   */
   showProcessingOverlay?: boolean;
+  
+  /**
+   * 是否监听DOM变化以处理动态添加的AI提示脚本
+   */
+  observeDOMChanges?: boolean;
 }
 
 /**
@@ -69,6 +77,7 @@ export class AIScript {
   private config: AIScriptConfig;
   private initialized: boolean = false;
   private readonly CACHE_KEY = 'ai-script-cache';
+  private observer: MutationObserver | null = null;
 
   /**
    * 从localStorage获取缓存数据
@@ -119,8 +128,8 @@ export class AIScript {
    * @param item 缓存项
    */
   private setCacheItem(key: string, item: CacheItem): void {
-    // const cacheData = this.getCacheFromStorage();
-    const cacheData = {[key]: item};
+    const cacheData = this.getCacheFromStorage();
+    cacheData[key] = item;
     this.saveCacheToStorage(cacheData);
   }
 
@@ -161,6 +170,7 @@ export class AIScript {
       enableCache: true,
       cacheExpiration: 30 * 24 * 60 * 60 * 1000, // 默认缓存30天
       showProcessingOverlay: true,
+      observeDOMChanges: true, // 默认启用DOM变化监听
       ...config
     };
     // 从script标签初始化配置
@@ -184,11 +194,13 @@ export class AIScript {
     const baseUrl = scriptTag.getAttribute('baseUrl');
     const model = scriptTag.getAttribute('model');
     const showProcessingOverlay = scriptTag.getAttribute('showProcessingOverlay');
+    const observeDOMChanges = scriptTag.getAttribute('observeDOMChanges');
     
     if (appKey) this.config.appKey = appKey;
     if (baseUrl) this.config.baseUrl = baseUrl;
     if (model) this.config.model = model;
     if (showProcessingOverlay) this.config.showProcessingOverlay = showProcessingOverlay === 'true';
+    if (observeDOMChanges) this.config.observeDOMChanges = observeDOMChanges === 'true';
     
     if (this.config.debug) {
       console.log('AIScript initialized from script tag:', {
@@ -209,6 +221,11 @@ export class AIScript {
     
     // 递归函数来描述DOM结构
     const describeElement = (element: Element, depth: number = 0): string => {
+      // 过滤掉script标签，不将其添加到DOM结构描述中
+      // if (element.tagName.toLowerCase() === 'script') {
+      //   return '';
+      // }
+      
       const indent = ' '.repeat(depth * 2);
       let description = `${indent}<${element.tagName.toLowerCase()}`;
       
@@ -305,7 +322,7 @@ export class AIScript {
   /**
    * 调用AI API获取代码
    */
-  private async callAI(context: string, prompt: string): Promise<AIResponse> {
+  private async callAI(context: string, prompt: string, skipCache: boolean = false): Promise<AIResponse> {
     try {
       if (!this.config.appKey) {
         throw new Error('API Key is required');
@@ -317,8 +334,8 @@ export class AIScript {
         timestamp: new Date().toISOString()
       });
       
-      // 如果启用了缓存，检查是否有有效的缓存结果
-      if (this.config.enableCache) {
+      // 如果启用了缓存且不跳过缓存，检查是否有有效的缓存结果
+      if (this.config.enableCache && !skipCache) {
         // 生成缓存键（上下文哈希 + 提示）
         const contextHash = this.hashContext(context);
         const cacheKey = `${contextHash}_${prompt}`;
@@ -357,11 +374,11 @@ export class AIScript {
           messages: [
             {
               role: 'system',
-              content: 'You are a JavaScript expert. Generate only executable JavaScript code without explanations. The code should implement the functionality described in the user prompt, considering the current page structure.'
+              content: 'You are a JavaScript expert. Generate only executable JavaScript code without explanations. The code should implement the functionality described in the user prompt, considering the current page structure. Follow coding conventions; function names and object property names must use valid English naming.'
             },
             {
               role: 'user',
-              content: `${context}\n\nPrompt: ${prompt}\n\nGenerate JavaScript code to implement this functionality. Return ONLY the code without any explanations or markdown.`
+              content: `${context}\n\nPrompt: ${prompt}\n\nGenerate JavaScript code to implement this functionality. Return ONLY the code without any explanations or markdown. DO wrap the code to an IIFE block and **DO NOT** wrap the code inside a DOMContentLoaded event listener!`
             }
           ]
         })
@@ -390,8 +407,8 @@ export class AIScript {
         timestamp: new Date().toISOString()
       });
       
-      // 如果启用了缓存，将结果存入缓存
-      if (this.config.enableCache) {
+      // 如果启用了缓存且不跳过缓存，将结果存入缓存
+      if (this.config.enableCache && !skipCache) {
         const contextHash = this.hashContext(context);
         const cacheKey = `${contextHash}_${prompt}`;
         this.setCacheItem(cacheKey, {
@@ -547,6 +564,95 @@ export class AIScript {
   /**
    * 初始化并运行AI脚本
    */
+  /**
+   * 处理单个AI提示脚本
+   * @param promptElement 提示脚本元素
+   * @param skipCache 是否跳过缓存
+   */
+  private async processPromptElement(promptElement: Element, skipCache: boolean = false): Promise<void> {
+    const content = promptElement.textContent?.trim();
+    if (!content) return;
+    
+    // 显示处理中的浮层
+    const el = this.showProcessingOverlay();
+    
+    // 获取DOM上下文
+    const context = this.getDOMContext();
+    
+    // 调用AI获取代码
+    const response = await this.callAI(context, content, skipCache);
+    
+    if (response.code) {
+      // 执行生成的代码，传递context和prompt以便在出错时清除缓存
+      this.executeCode(response.code, context, content);
+    } else if (response.error && this.config.debug) {
+      console.error('AI code generation failed:', response.error);
+    }
+    
+    // 移除处理中的浮层
+    el && el.remove();
+  }
+  
+  /**
+   * 设置DOM变化观察器
+   */
+  private setupDOMObserver(): void {
+    if (!this.config.observeDOMChanges || !window.MutationObserver) return;
+    
+    // 创建一个观察器实例
+    this.observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        // 检查是否有新节点添加
+        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+          // 遍历添加的节点
+          mutation.addedNodes.forEach((node) => {
+            // 检查是否是元素节点
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node as Element;
+              
+              // 检查是否是AI提示脚本
+              if (element.nodeName === 'SCRIPT' && element.getAttribute('type') === 'ai/prompt') {
+                // 处理新添加的AI提示脚本，跳过缓存
+                this.processPromptElement(element, true);
+              } else {
+                // 检查子元素中是否有AI提示脚本
+                const promptElements = element.querySelectorAll('script[type="ai/prompt"]');
+                promptElements.forEach((promptElement) => {
+                  // 处理新添加的AI提示脚本，跳过缓存
+                  this.processPromptElement(promptElement, true);
+                });
+              }
+            }
+          });
+        }
+      }
+    });
+    
+    // 配置观察选项
+    const config = { childList: true, subtree: true };
+    
+    // 开始观察文档
+    this.observer.observe(document, config);
+    
+    if (this.config.debug) {
+      console.log('DOM observer setup complete');
+    }
+  }
+  
+  /**
+   * 停止DOM变化观察
+   */
+  private stopDOMObserver(): void {
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+      
+      if (this.config.debug) {
+        console.log('DOM observer stopped');
+      }
+    }
+  }
+  
   async init(): Promise<void> {
     if (this.initialized) return;
     this.initialized = true;
@@ -563,21 +669,23 @@ export class AIScript {
       if (this.config.debug) {
         console.log('No AI prompts found on the page');
       }
-      return;
-    }
-    
-    // 处理每个提示
-    for (const prompt of prompts) {
-      // 调用AI获取代码
-      const response = await this.callAI(context, prompt);
-      
-      if (response.code) {
-        // 执行生成的代码，传递context和prompt以便在出错时清除缓存
-        this.executeCode(response.code, context, prompt);
-      } else if (response.error && this.config.debug) {
-        console.error('AI code generation failed:', response.error);
+    } else {
+      // 处理每个提示
+      for (const prompt of prompts) {
+        // 调用AI获取代码
+        const response = await this.callAI(context, prompt);
+        
+        if (response.code) {
+          // 执行生成的代码，传递context和prompt以便在出错时清除缓存
+          this.executeCode(response.code, context, prompt);
+        } else if (response.error && this.config.debug) {
+          console.error('AI code generation failed:', response.error);
+        }
       }
     }
+    
+    // 设置DOM变化观察器
+    this.setupDOMObserver();
 
     el && el.remove();
   }
@@ -593,4 +701,7 @@ if (typeof window !== 'undefined') {
       console.error('AIScript initialization failed:', error);
     }
   });
+  
+  // 暴露AIScript实例到全局，方便调试和手动控制
+  (window as any).AIScriptInstance = aiScript;
 }
