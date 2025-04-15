@@ -7,7 +7,7 @@
 ### 在浏览器中直接使用
 
 ```html
-  <script src="https://cdn.jsdelivr.net/npm/ai-script@latest/dist/ai-script.umd.js" appKey="sk-262**********62b" baseUrl="https://api.deepseek.com" model="deepseek-chat"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@bearbobo/ai-script@latest/dist/ai-script.umd.js" appKey="sk-262**********62b" baseUrl="https://api.deepseek.com" model="deepseek-chat"></script>
 ```
 ### 示例
 
@@ -61,7 +61,7 @@
       border-radius: 4px;
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/ai-script@latest/dist/ai-script.umd.js" appKey="sk-262**********62b" baseUrl="https://api.deepseek.com" model="deepseek-chat"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@bearbobo/ai-script@latest/dist/ai-script.umd.js" appKey="sk-262**********62b" baseUrl="https://api.deepseek.com" model="deepseek-chat"></script>
 </head>
 <body>
   <h1>AI-Script Demo</h1>
@@ -123,7 +123,7 @@ AI-Script 内置了缓存功能，可以显著提高性能并减少API调用次�
 
 ```html
 <script 
-  src="https://cdn.jsdelivr.net/npm/ai-script@latest/dist/ai-script.umd.js" 
+  src="https://cdn.jsdelivr.net/npm/@bearbobo/ai-script@latest/dist/ai-script.umd.js" 
   appKey="your-api-key" 
   baseUrl="https://api.example.com" 
   model="model-name"
@@ -160,7 +160,7 @@ localStorage.removeItem('ai-script-cache');
 
 ```html
 <script 
-  src="https://cdn.jsdelivr.net/npm/ai-script@latest/dist/ai-script.umd.js" 
+  src="https://cdn.jsdelivr.net/npm/@bearbobo/ai-script@latest/dist/ai-script.umd.js" 
   appKey="your-api-key" 
   debug="true">
 </script>

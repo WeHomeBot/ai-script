@@ -7,7 +7,7 @@ Provides AI scripts that can run in the browser.
 ### Direct Use in Browser
 
 ```html
-  <script src="https://cdn.jsdelivr.net/npm/ai-script@latest/dist/ai-script.umd.js" appKey="sk-262**********62b" baseUrl="https://api.deepseek.com" model="deepseek-chat"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@bearbobo/ai-script@latest/dist/ai-script.umd.js" appKey="sk-262**********62b" baseUrl="https://api.deepseek.com" model="deepseek-chat"></script>
 ```
 ### Example
 
@@ -61,7 +61,7 @@ Provides AI scripts that can run in the browser.
       border-radius: 4px;
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/ai-script@latest/dist/ai-script.umd.js" appKey="sk-262**********62b" baseUrl="https://api.deepseek.com" model="deepseek-chat"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@bearbobo/ai-script@latest/dist/ai-script.umd.js" appKey="sk-262**********62b" baseUrl="https://api.deepseek.com" model="deepseek-chat"></script>
 </head>
 <body>
   <h1>AI-Script Demo</h1>
@@ -123,7 +123,7 @@ You can configure the caching feature as follows:
 
 ```html
 <script 
-  src="https://cdn.jsdelivr.net/npm/ai-script@latest/dist/ai-script.umd.js" 
+  src="https://cdn.jsdelivr.net/npm/@bearbobo/ai-script@latest/dist/ai-script.umd.js" 
   appKey="your-api-key" 
   baseUrl="https://api.example.com" 
   model="model-name"
@@ -160,7 +160,7 @@ Enable debug mode to view cache-related log information in the console:
 
 ```html
 <script 
-  src="https://cdn.jsdelivr.net/npm/ai-script@latest/dist/ai-script.umd.js" 
+  src="https://cdn.jsdelivr.net/npm/@bearbobo/ai-script@latest/dist/ai-script.umd.js" 
   appKey="your-api-key" 
   debug="true">
 </script>

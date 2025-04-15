@@ -1,5 +1,5 @@
 {
-  "name": "ai-script",
+  "name": "@bearbobo/ai-script",
   "version": "0.1.0",
   "description": "TypeScript library that can run in browser",
   "type": "module",
