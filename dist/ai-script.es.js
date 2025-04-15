@@ -1,7 +1,7 @@
 var m = Object.defineProperty;
 var b = (a, e, t) => e in a ? m(a, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : a[e] = t;
 var g = (a, e, t) => (b(a, typeof e != "symbol" ? e + "" : e, t), t);
-class v {
+class y {
   /**
    * 创建一个新的AIScript实例
    * @param config 配置选项
@@ -11,6 +11,7 @@ class v {
     g(this, "initialized", !1);
     g(this, "CACHE_KEY", "ai-script-cache");
     g(this, "observer", null);
+    g(this, "processingOverlayCount", 0);
     this.config = {
       appKey: "",
       baseUrl: "https://api.deepseek.com",
@@ -106,16 +107,16 @@ class v {
     let o = i;
     const s = (r, c = 0) => {
       var d;
-      let l = `${" ".repeat(c * 2)}<${r.tagName.toLowerCase()}`;
-      if (r.id && (l += ` id="${r.id}"`), r.className && (l += ` class="${r.className}"`), l += ">", r.children.length === 0) {
-        const h = (d = r.textContent) == null ? void 0 : d.trim();
-        h && (l += ` ${h}`);
+      let h = `${" ".repeat(c * 2)}<${r.tagName.toLowerCase()}`;
+      if (r.id && (h += ` id="${r.id}"`), r.className && (h += ` class="${r.className}"`), h += ">", r.children.length === 0) {
+        const l = (d = r.textContent) == null ? void 0 : d.trim();
+        l && (h += ` ${l}`);
       }
-      l += `
+      h += `
 `;
-      for (let h = 0; h < r.children.length; h++)
-        l += s(r.children[h], c + 1);
-      return l;
+      for (let l = 0; l < r.children.length; l++)
+        h += s(r.children[l], c + 1);
+      return h;
     };
     return o += s(t), o;
   }
@@ -259,9 +260,17 @@ Generate JavaScript code to implement this functionality. Return ONLY the code w
       console.error("Failed to execute AI-generated code:", o), t && i && (this.clearPromptCache(t, i), this.config.debug && console.log("Cleared cache due to code execution error"));
     }
   }
+  hideProcessingOverlay() {
+    if (this.config.showProcessingOverlay && (this.processingOverlayCount--, this.processingOverlayCount <= 0)) {
+      const e = document.getElementById("ai-script-overlay-container");
+      e && e.remove();
+    }
+  }
   showProcessingOverlay() {
     let e;
     if (this.config.showProcessingOverlay) {
+      if (this.processingOverlayCount++, this.processingOverlayCount > 1)
+        return;
       const t = document.body;
       if (!t)
         return;
@@ -318,7 +327,6 @@ Generate JavaScript code to implement this functionality. Return ONLY the code w
 </div>
       `, t.appendChild(e);
     }
-    return e;
   }
   /**
    * 初始化并运行AI脚本
@@ -329,12 +337,18 @@ Generate JavaScript code to implement this functionality. Return ONLY the code w
    * @param skipCache 是否跳过缓存
    */
   async processPromptElement(e, t = !1) {
-    var n;
-    const i = (n = e.textContent) == null ? void 0 : n.trim();
-    if (!i)
-      return;
-    const o = this.showProcessingOverlay(), s = e instanceof HTMLElement ? e.getAttribute("for") : null, r = this.getDOMContext(s || void 0), c = await this.callAI(r, i, t);
-    c.code ? this.executeCode(c.code, r, i) : c.error && this.config.debug && console.error("AI code generation failed:", c.error), o && o.remove();
+    var o;
+    const i = (o = e.textContent) == null ? void 0 : o.trim();
+    if (i) {
+      this.showProcessingOverlay();
+      try {
+        const s = e instanceof HTMLElement ? e.getAttribute("for") : null, r = this.getDOMContext(s || void 0), c = await this.callAI(r, i, t);
+        c.code ? this.executeCode(c.code, r, i) : c.error && this.config.debug && console.error("AI code generation failed:", c.error);
+      } catch (s) {
+        console.error("Error processing AI prompt:", s);
+      }
+      this.hideProcessingOverlay();
+    }
   }
   /**
    * 设置DOM变化观察器
@@ -363,26 +377,21 @@ Generate JavaScript code to implement this functionality. Return ONLY the code w
     this.observer && (this.observer.disconnect(), this.observer = null, this.config.debug && console.log("DOM observer stopped"));
   }
   async init() {
-    var i;
     if (this.initialized)
       return;
     this.initialized = !0;
-    const e = this.showProcessingOverlay(), t = this.findAIPrompts();
-    if (t.length === 0)
+    const e = this.findAIPrompts();
+    if (e.length === 0)
       this.config.debug && console.log("No AI prompts found on the page");
-    else
-      for (const o of t) {
-        const s = (i = o.textContent) == null ? void 0 : i.trim();
-        if (!s)
-          continue;
-        const r = o instanceof HTMLElement ? o.getAttribute("for") : null, c = this.getDOMContext(r || void 0), n = await this.callAI(c, s);
-        n.code ? this.executeCode(n.code, c, s) : n.error && this.config.debug && console.error("AI code generation failed:", n.error);
-      }
-    this.setupDOMObserver(), e && e.remove();
+    else {
+      const t = Array.from(e).map((i) => this.processPromptElement(i));
+      await Promise.all(t);
+    }
+    this.setupDOMObserver();
   }
 }
 if (typeof window < "u") {
-  const a = new v();
+  const a = new y();
   window.addEventListener("DOMContentLoaded", async () => {
     try {
       await a.init();
@@ -392,5 +401,5 @@ if (typeof window < "u") {
   }), window.AIScriptInstance = a;
 }
 export {
-  v as AIScript
+  y as AIScript
 };

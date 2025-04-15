@@ -78,6 +78,7 @@ export class AIScript {
   private initialized: boolean = false;
   private readonly CACHE_KEY = 'ai-script-cache';
   private observer: MutationObserver | null = null;
+  private processingOverlayCount: number = 0;
 
   /**
    * 从localStorage获取缓存数据
@@ -512,9 +513,25 @@ export class AIScript {
     }
   }
 
-  private showProcessingOverlay(): HTMLElement | null | undefined  {
+  private hideProcessingOverlay(): void {
+    if (this.config.showProcessingOverlay) {
+      this.processingOverlayCount--;
+      if (this.processingOverlayCount <= 0) {
+        const el = document.getElementById("ai-script-overlay-container");
+        if (el) {
+          el.remove();
+        }
+      }
+    }
+  }
+
+  private showProcessingOverlay(): void  {
     let el;
     if (this.config.showProcessingOverlay) {
+      this.processingOverlayCount++;
+      if (this.processingOverlayCount > 1) {
+        return;
+      }
       const body = document.body;
       if (!body) return;
       // 初始化AI脚本
@@ -574,7 +591,6 @@ export class AIScript {
       `
       body.appendChild(el);
     }
-    return el;
   }
 
   /**
@@ -590,26 +606,29 @@ export class AIScript {
     if (!content) return;
     
     // 显示处理中的浮层
-    const el = this.showProcessingOverlay();
+    this.showProcessingOverlay();
     
-    // 获取for属性，如果存在，则只获取指定DOM元素的上下文
-    const forElementId = promptElement instanceof HTMLElement ? promptElement.getAttribute('for') : null;
-    
-    // 获取DOM上下文，如果有for属性，则传递给getDOMContext
-    const context = this.getDOMContext(forElementId || undefined);
-    
-    // 调用AI获取代码
-    const response = await this.callAI(context, content, skipCache);
-    
-    if (response.code) {
-      // 执行生成的代码，传递context和prompt以便在出错时清除缓存
-      this.executeCode(response.code, context, content);
-    } else if (response.error && this.config.debug) {
-      console.error('AI code generation failed:', response.error);
+    try {
+      // 获取for属性，如果存在，则只获取指定DOM元素的上下文
+      const forElementId = promptElement instanceof HTMLElement ? promptElement.getAttribute('for') : null;
+      
+      // 获取DOM上下文，如果有for属性，则传递给getDOMContext
+      const context = this.getDOMContext(forElementId || undefined);
+      
+      // 调用AI获取代码
+      const response = await this.callAI(context, content, skipCache);
+      
+      if (response.code) {
+        // 执行生成的代码，传递context和prompt以便在出错时清除缓存
+        this.executeCode(response.code, context, content);
+      } else if (response.error && this.config.debug) {
+        console.error('AI code generation failed:', response.error);
+      }
+    } catch (error) {
+      console.error('Error processing AI prompt:', error);
     }
     
-    // 移除处理中的浮层
-    el && el.remove();
+    this.hideProcessingOverlay();
   }
   
   /**
@@ -675,8 +694,6 @@ export class AIScript {
   async init(): Promise<void> {
     if (this.initialized) return;
     this.initialized = true;
-
-    const el = this.showProcessingOverlay();
     
     // 查找AI提示
     const promptElements = this.findAIPrompts();
@@ -686,33 +703,16 @@ export class AIScript {
         console.log('No AI prompts found on the page');
       }
     } else {
-      // 处理每个提示元素
-      for (const promptElement of promptElements) {
-        const content = promptElement.textContent?.trim();
-        if (!content) continue;
-        
-        // 获取for属性，如果存在，则只获取指定DOM元素的上下文
-        const forElementId = promptElement instanceof HTMLElement ? promptElement.getAttribute('for') : null;
-        
-        // 获取DOM上下文，如果有for属性，则传递给getDOMContext
-        const context = this.getDOMContext(forElementId || undefined);
-        
-        // 调用AI获取代码
-        const response = await this.callAI(context, content);
-        
-        if (response.code) {
-          // 执行生成的代码，传递context和prompt以便在出错时清除缓存
-          this.executeCode(response.code, context, content);
-        } else if (response.error && this.config.debug) {
-          console.error('AI code generation failed:', response.error);
-        }
-      }
+      // 并行处理每个提示元素
+      const tasks = Array.from(promptElements).map((promptElement) => {
+        return this.processPromptElement(promptElement);
+      });
+
+      await Promise.all(tasks);
     }
     
     // 设置DOM变化观察器
     this.setupDOMObserver();
-
-    el && el.remove();
   }
 }
 
