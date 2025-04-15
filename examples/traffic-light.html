@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>交通灯演示 - AI-Script</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    .demo-container {
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .traffic-light {
+      display: flex;
+      justify-content: center;
+      margin: 30px 0;
+    }
+    .light {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin: 0 15px;
+      background-color: #333;
+      position: relative;
+    }
+    .light::after {
+      content: attr(data-color);
+      position: absolute;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+    }
+    .red {
+      background-color: #333;
+      border: 3px solid #ff0000;
+    }
+    .yellow {
+      background-color: #333;
+      border: 3px solid #ffff00;
+    }
+    .green {
+      background-color: #333;
+      border: 3px solid #00ff00;
+    }
+    .active-red {
+      background-color: #ff0000;
+    }
+    .active-yellow {
+      background-color: #ffff00;
+    }
+    .active-green {
+      background-color: #00ff00;
+    }
+    .status {
+      margin-top: 40px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+  </style>
+  <script src="../dist/ai-script.umd.js" appKey="your-app-key" baseUrl="https://api.moonshot.cn" model="moonshot-v1-8k"></script>
+</head>
+<body>
+  <h1>交通灯演示 - AI-Script</h1>
+  
+  <div class="demo-container">
+    <h2>交通灯循环</h2>
+    <div class="traffic-light">
+      <div class="light red" data-color="红灯"></div>
+      <div class="light yellow" data-color="黄灯"></div>
+      <div class="light green" data-color="绿灯"></div>
+    </div>
+    <div class="status">当前状态: <span>初始化中...</span></div>
+  </div>
+
+  <script type="ai/prompt">
+    实现一个交通灯控制系统，从左到右显示红、黄、绿三个灯，循环依次亮起，分别是红灯亮5秒，黄灯亮1秒，绿灯亮4秒。
+    
+    红灯亮时，添加class "active-red"到红灯元素，并移除其他灯的active类。
+    黄灯亮时，添加class "active-yellow"到黄灯元素，并移除其他灯的active类。
+    绿灯亮时，添加class "active-green"到绿灯元素，并移除其他灯的active类。
+    
+    在状态显示区域显示当前是什么灯亮起，以及剩余时间。
+  </script>
+
+</body>
+</html>
