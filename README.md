@@ -11,6 +11,8 @@ Provides AI scripts that can run in the browser.
 ```
 ### Example
 
+![Apr-15-2025 13-45-26](https://github.com/user-attachments/assets/67c79970-e24a-403a-9158-75a07f594768)
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
