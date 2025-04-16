@@ -75,7 +75,7 @@ Provides AI scripts that can run in the browser.
     <button>Click me</button>
   </div>
 
-  <script type="ai">
+  <script type="ai/prompt">
     Increment the click count by 1 each time the button is clicked
   </script>
 </body>

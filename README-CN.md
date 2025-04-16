@@ -73,7 +73,7 @@
     <button>Click me</button>
   </div>
 
-  <script type="ai">
+  <script type="ai/prompt">
     每次点击按钮，点击次数加1
   </script>
 </body>
